@@ -4,6 +4,7 @@ code for generating data set ES-ImageNet with corresponding training code
 ## dataset generator 
   - some codes of ODG algorithm
   - The variables to be modified include datapath (data storage path after transformation, which needs to be created before transformation) and root_Path (root directory of training set before transformation)
+  | --- | --- |
   | traconvert.py        | converting training set of ISLVRC 2012 into event stream using ODG |
   | trainlabel_dir.txt   | It stores the corresponding relationship between the class name and label of the original Imagenet file |
   | trainlabel.txt       | It is generated during transformation and stores the label of training set |
@@ -16,7 +17,7 @@ code for generating data set ES-ImageNet with corresponding training code
   - codes are in ./datasets
   - some traing examples are provided for ES-imagenet in ./example
   An example code for easily using this dataset based on **Pytorch**
-  '''python
+  ```python
   from __future__ import print_function
   import sys
   sys.path.append("..")
@@ -40,7 +41,7 @@ code for generating data set ES-ImageNet with corresponding training code
   for batch_idx, (inputs, targets) in enumerate(test_loader):
     pass
     # input = [batchsize,time,channel,width,height]
-  '''
+  ```
   
   
   ## training example and benchmarks
