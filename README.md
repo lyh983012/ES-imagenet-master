@@ -4,7 +4,8 @@ code for generating data set ES-ImageNet with corresponding training code
 ## dataset generator 
   - some codes of ODG algorithm
   - The variables to be modified include datapath (data storage path after transformation, which needs to be created before transformation) and root_Path (root directory of training set before transformation)
-  | --- | --- |
+  | file name | function |
+  | -- | -- |
   | traconvert.py        | converting training set of ISLVRC 2012 into event stream using ODG |
   | trainlabel_dir.txt   | It stores the corresponding relationship between the class name and label of the original Imagenet file |
   | trainlabel.txt       | It is generated during transformation and stores the label of training set |
