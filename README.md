@@ -66,13 +66,13 @@ code for generating data set ES-ImageNet with corresponding training code
   $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_CONVLSTM.py #ConvLSTM (no used in paper)
   ```
   ### baseling / Benchmark
-  |Structure| Type Test Acc/%| # of Para|
-  | ---- | ---- | ---- |
-  |2D-CNN |41.030 |11.68M|
-  |3D-CNN |38.050 |28.56M|
-  |LIF |39.894 |11.69M|
-  |LIAF |42.544| 11.69M||
-  |2D-CNN |42.736| 21.79M|
-  |3D-CNN |39.410 |48.22M|
-  |LIF| 43.424 |21.80M|
-  |LIAF| 47.466 |21.80M|
+  |Network|layer| Type Test Acc/%| # of Para|
+  | ---- | ---- | ---- | ---- |
+  | ResNet18 |2D-CNN |41.030 |11.68M|
+  | ResNet18|3D-CNN |38.050 |28.56M|
+  | ResNet18|LIF |39.894 |11.69M|
+  | ResNet18|LIAF |42.544| 11.69M||
+  | ResNet18|2D-CNN |42.736| 21.79M|
+  | ResNet18|3D-CNN |39.410 |48.22M|
+  | ResNet18|LIF| 43.424 |21.80M|
+  | ResNet18|LIAF| 47.466 |21.80M|
