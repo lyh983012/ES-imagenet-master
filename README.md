@@ -5,7 +5,7 @@ code for generating data set ES-ImageNet with corresponding training code
   - some codes of ODG algorithm
   - The variables to be modified include datapath (data storage path after transformation, which needs to be created before transformation) and root_Path (root directory of training set before transformation)
   | file name | function |
-  | -- | -- |
+  | ---- | ---- |
   | traconvert.py        | converting training set of ISLVRC 2012 into event stream using ODG |
   | trainlabel_dir.txt   | It stores the corresponding relationship between the class name and label of the original Imagenet file |
   | trainlabel.txt       | It is generated during transformation and stores the label of training set |
@@ -47,4 +47,20 @@ code for generating data set ES-ImageNet with corresponding training code
   
   ## training example and benchmarks
   
-    
+  ### Requirements
+  -   Python >= 3.5
+  -   Pytorch >= 1.7
+  -   CUDA >=10.0
+  -   TenosrBoradX(optional)
+
+  ### Train the baseline models
+  
+  ```bash
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/example_ES_res18.py.py #LIAF/LIF-ResNet 18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/example_ES_res34.py.py #LIAF/LIF-ResNet 34
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_3DCNN34.py #3DCNN-ResNet 34
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_3DCNN18.py #3DCNN-ResNet 18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_2DCNN34.py #2DCNN-ResNet 34#somebug
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_2DCNN18.py #2DCNN-ResNet18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_CONVLSTM.py #ConvLSTM (no used in paper)
+  ```
