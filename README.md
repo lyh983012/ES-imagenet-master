@@ -4,6 +4,7 @@ code for generating data set ES-ImageNet with corresponding training code
 ## dataset generator 
   - some codes of ODG algorithm
   - The variables to be modified include datapath (data storage path after transformation, which needs to be created before transformation) and root_Path (root directory of training set before transformation)
+  
   | file name | function |
   | ---- | ---- |
   | traconvert.py        | converting training set of ISLVRC 2012 into event stream using ODG |
@@ -64,3 +65,14 @@ code for generating data set ES-ImageNet with corresponding training code
   $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_2DCNN18.py #2DCNN-ResNet18
   $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_CONVLSTM.py #ConvLSTM (no used in paper)
   ```
+  ### baseling / Benchmark
+  |Structure| Type Test Acc/%| # of Para|
+  | ---- | ---- | ---- |
+  |2D-CNN |41.030 |11.68M|
+  |3D-CNN |38.050 |28.56M|
+  |LIF |39.894 |11.69M|
+  |LIAF |42.544| 11.69M||
+  |2D-CNN |42.736| 21.79M|
+  |3D-CNN |39.410 |48.22M|
+  |LIF| 43.424 |21.80M|
+  |LIAF| 47.466 |21.80M|
