@@ -69,11 +69,12 @@ code for generating data set ES-ImageNet with corresponding training code
   $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 compare_CONVLSTM.py #ConvLSTM (no used in paper)
   $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example_ES_res50.py #LIAF/LIF-ResNet-50 (no used in paper)
   ```
-  
+
 ** note:** To select LIF mode, change the config files under /LIAFnet :
 ``` self.actFun= torch.nn.LeakyReLU(0.2, inplace=False) #nexttest:selu```
 to
 ``` self.actFun= LIAF.LIFactFun.apply```
+
 
   ### baseling / Benchmark
   |Network|layer| Type Test Acc/%| # of Para| FP32+/GFLOPs|FP32x/GFLOPs|
