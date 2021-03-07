@@ -57,22 +57,25 @@ code for generating data set ES-ImageNet with corresponding training code
   ### Train the baseline models
   
   ```bash
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/example_ES_res18.py.py #LIAF/LIF-ResNet 18
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/example_ES_res34.py.py #LIAF/LIF-ResNet 34
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_3DCNN34.py #3DCNN-ResNet 34
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_3DCNN18.py #3DCNN-ResNet 18
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_2DCNN34.py #2DCNN-ResNet 34#somebug
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_ES_2DCNN18.py #2DCNN-ResNet18
-  $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 example/compare_CONVLSTM.py #ConvLSTM (no used in paper)
+  
+  $ cd example
+  
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/example_ES_res18.py #LIAF/LIF-ResNet-18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/example_ES_res34.py #LIAF/LIF-ResNet-34
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/compare_ES_3DCNN34.py #3DCNN-ResNet-34
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/compare_ES_3DCNN18.py #3DCNN-ResNet-18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/compare_ES_2DCNN34.py #2DCNN-ResNet-34 
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/compare_ES_2DCNN18.py #2DCNN-ResNet-18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example/compare_CONVLSTM.py #ConvLSTM (no used in paper)
   ```
   ### baseling / Benchmark
-  |Network|layer| Type Test Acc/%| # of Para|
-  | ---- | ---- | ---- | ---- |
-  | ResNet18 |2D-CNN |41.030 |11.68M|
-  | ResNet18|3D-CNN |38.050 |28.56M|
-  | ResNet18|LIF |39.894 |11.69M|
-  | ResNet18|LIAF |42.544| 11.69M||
-  | ResNet18|2D-CNN |42.736| 21.79M|
-  | ResNet18|3D-CNN |39.410 |48.22M|
-  | ResNet18|LIF| 43.424 |21.80M|
-  | ResNet18|LIAF| 47.466 |21.80M|
+  |Network|layer| Type Test Acc/%| # of Para| FP32+/GFLOPs|FP32x/GFLOPs|
+  | ---- | ---- | ---- | ---- |---- |---- |
+  | ResNet18 |2D-CNN |41.030 |11.68M|1.575|1.770 |
+  | ResNet18|3D-CNN |38.050 |28.56M|12.082|12.493 |
+  | ResNet18|LIF |39.894 |11.69M|12.668|0.269 |
+  | ResNet18|LIAF |42.544| 11.69M|12.668|14.159 |
+  | ResNet34|2D-CNN |42.736| 21.79M|3.211|3.611 |
+  | ResNet34|3D-CNN |39.410 |48.22M|20.671|21.411 |
+  | ResNet34|LIF| 43.424 |21.80M|25.783|0.288 |
+  | ResNet34|LIAF| 47.466 |21.80M|25.783|28.901 |
