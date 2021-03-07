@@ -1,0 +1,88 @@
+# es-imagenet-master
+code for generating data set ES-ImageNet with corresponding training code
+
+## dataset generator 
+  - some codes of ODG algorithm
+  - The variables to be modified include datapath (data storage path after transformation, which needs to be created before transformation) and root_Path (root directory of training set before transformation)
+  
+  | file name | function |
+  | ---- | ---- |
+  | traconvert.py        | converting training set of ISLVRC 2012 into event stream using ODG |
+  | trainlabel_dir.txt   | It stores the corresponding relationship between the class name and label of the original Imagenet file |
+  | trainlabel.txt       | It is generated during transformation and stores the label of training set |
+  | valconvert.py        | Transformation code for test set. |
+  | valorigin.txt        | Original test label, need and valconvert.py Put it in the same folder |
+  | vallabel.txt         | It is generated during transformation and stores the label of training set. |
+
+## dataset usage
+
+  - codes are in ./datasets
+  - some traing examples are provided for ES-imagenet in ./example
+  An example code for easily using this dataset based on **Pytorch**
+  ```python
+  from __future__ import print_function
+  import sys
+  sys.path.append("..")
+  from datasets.es_imagenet_new import ESImagenet_Dataset
+  import torch.nn as nn
+  import torch
+
+  data_path = None #TODO:modify 
+  train_dataset = ESImagenet_Dataset(mode='train',data_set_path=data_path)
+  test_dataset = ESImagenet_Dataset(mode='test',data_set_path=data_path)
+
+  train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+  test_sampler  = torch.utils.data.distributed.DistributedSampler(test_dataset)
+  train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=1,pin_memory=True,drop_last=True,sampler=train_sampler)
+  test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=1,pin_memory=True)
+  
+  for batch_idx, (inputs, targets) in enumerate(train_loader)
+    pass
+    # input = [batchsize,time,channel,width,height]
+    
+  for batch_idx, (inputs, targets) in enumerate(test_loader):
+    pass
+    # input = [batchsize,time,channel,width,height]
+  ```
+  
+  
+  ## training example and benchmarks
+  
+  ### Requirements
+  -   Python >= 3.5
+  -   Pytorch >= 1.7
+  -   CUDA >=10.0
+  -   TenosrBoradX(optional)
+
+  ### Train the baseline models
+  
+  ```bash
+  
+  $ cd example
+  
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example_ES_res18.py #LIAF/LIF-ResNet-18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example_ES_res34.py #LIAF/LIF-ResNet-34
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 compare_ES_3DCNN34.py #3DCNN-ResNet-34
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 compare_ES_3DCNN18.py #3DCNN-ResNet-18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 compare_ES_2DCNN34.py #2DCNN-ResNet-34 
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 compare_ES_2DCNN18.py #2DCNN-ResNet-18
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 compare_CONVLSTM.py #ConvLSTM (no used in paper)
+  $ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 example_ES_res50.py #LIAF/LIF-ResNet-50 (no used in paper)
+  ```
+  
+** note:** To select LIF mode, change the config files under /LIAFnet :
+``` self.actFun= torch.nn.LeakyReLU(0.2, inplace=False) #nexttest:selu```
+to
+``` self.actFun= LIAF.LIFactFun.apply```
+
+  ### baseling / Benchmark
+  |Network|layer| Type Test Acc/%| # of Para| FP32+/GFLOPs|FP32x/GFLOPs|
+  | ---- | ---- | ---- | ---- |---- |---- |
+  | ResNet18 |2D-CNN |41.030 |11.68M|1.575|1.770 |
+  | ResNet18|3D-CNN |38.050 |28.56M|12.082|12.493 |
+  | ResNet18|LIF |39.894 |11.69M|12.668|0.269 |
+  | ResNet18|LIAF |42.544| 11.69M|12.668|14.159 |
+  | ResNet34|2D-CNN |42.736| 21.79M|3.211|3.611 |
+  | ResNet34|3D-CNN |39.410 |48.22M|20.671|21.411 |
+  | ResNet34|LIF| 43.424 |21.80M|25.783|0.288 |
+  | ResNet34|LIAF| 47.466 |21.80M|25.783|28.901 |

@@ -1,7 +1,3 @@
-# Author: lyh 
-# Date  : 2020-09-19
-# 使用了分布式学习的ImageNet训练代码
-# 使用以下命令直接执行
 # CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 nohup python -m torch.distributed.launch --nproc_per_node=7 example_ES_res50.py
 from __future__ import print_function
 import sys
@@ -20,7 +16,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 ##################### Step1. Env Preparation #####################
 
-writer = None #仅在master进程上输出
+writer = None 
 master = False 
 os.environ['CUDA_VISIBLE_DEVICES'] = "0,1,2,3,4,5,6"
 save_folder = 'ES_exp_50_ES_new_2'

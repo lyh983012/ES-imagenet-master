@@ -1,8 +1,3 @@
-#data:2021-01-07
-#author:linyh
-#email: 532109881@qq.com
-#note:底层实现
-
 import torch
 import torch.nn as nn 
 import torch.nn.functional as F
@@ -10,14 +5,12 @@ import os
 import math
 import util.thBN as thBN
 
-#训练要求
 torch.manual_seed(1)
 torch.cuda.manual_seed_all(1)# if you are using multi-GPU.
 torch.cuda.manual_seed(1)   
-torch.backends.cudnn.deterministic = False   #保证每次结果一样
+torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = True 
 
-#这部分超参数不是很重要，可以不用修改
 dtype = torch.float
 allow_print = False
 using_td_batchnorm = False
@@ -25,7 +18,7 @@ using_td_batchnorm = False
 #######################################################
 #activation
 class LIFactFun(torch.autograd.Function):
-    thresh = 0.25                                #LIF激活函数的阈值参数
+    thresh = 0.5                                #LIF激活函数的阈值参数
     lens = 0.5                                  #LIF激活函数的梯度近似参数，越小则梯度激活区域越窄
     bias = -0.2                                 #多阈值激活函数的值域平移参数
     sigma = 1
@@ -41,9 +34,9 @@ class LIFactFun(torch.autograd.Function):
     def forward(ctx, input, thresh=None):
         if thresh is None:
             thresh = LIFactFun.thresh
-        fire = input.gt(thresh.to(input.device)).float() 
+        fire = input.gt(thresh).float() 
         ctx.save_for_backward(input)
-        ctx.thresh = thresh.to(input.device)
+        ctx.thresh = thresh
         return fire # 阈值激活
 
     @staticmethod
@@ -84,13 +77,7 @@ def paramInit(model,method='kaiming'):
 #######################################################
 # cells 
 # keneral-newv-norm-liaf-activation-pooling
-
-# LIF神经元
 class baseNeuron(nn.Module):
-    # 所有参数都可训练的LIF神经元
-    # 阈值按ARLIF的训练方法
-    # decay使用sigmoid归一化
-    # FC处理2维输入，Conv处理4维输入
     fire_rate_upperbound = 0.8
     fire_rate_lowebound  = 0.2
     thresh_trainable = False
@@ -119,9 +106,7 @@ class baseNeuron(nn.Module):
             self.thresh -= 0.1
             
     def mem_update_fc(self,x,init_mem=None,spikeAct = LIFactFun.apply):
-        # 输入突触连接为fc层 输入维度为
         # [B,T,N]
-        
         time_window = x.size()[1]
         spike = torch.zeros_like(x[:,0,:])
         output = torch.zeros_like(x)
@@ -141,9 +126,7 @@ class baseNeuron(nn.Module):
         return output
 
     def mem_update(self,x,init_mem=None,spikeAct = LIFactFun.apply):
-        # 输入突触连接为conv层 输入维度为
-        # [B,C,T,W,H]
-                
+        # [B,C,T,W,H]    
         time_window = x.size()[2]
         spike = torch.zeros_like(x[:,:,0,:,:])
         output = torch.zeros_like(x)
@@ -162,20 +145,12 @@ class baseNeuron(nn.Module):
             output[:,:,i,:,:] = self.actFun(mem_old) 
         return output
 
-# 复合的LIAF神经元，突触连接：linear
 class LIAFCell(baseNeuron):
-
     #standard LIAF cell based on LIFcell
-    #简介: 最简单的LIAF cell，由LIF模型的演变而来
-    #记号：v为膜电位，f为脉冲，x为输入，w为权重，t是时间常数
     #         v_t' = v_{t-1} + w * x_n
     #         f = spikefun(v_t')
     #         x_{n+1} = analogfun(v_t')
     #         v_t = v_t' * (1-f) * t
-    #用法：torch_network.add_module(name,LIAF.LIAFCell())
-    #update: 2020-02-29
-    #author: Linyh
-
     def __init__(self,
         inputSize,
         hiddenSize,
@@ -204,15 +179,12 @@ class LIAFCell(baseNeuron):
         self.spikeActFun = LIFactFun.apply  
         self.useBatchNorm = useBatchNorm    
         self.batchSize = None
-
         # block 1：add synaptic inputs: Wx+b=y
         self.kernel=nn.Linear(inputSize, hiddenSize)    
         paramInit(self.kernel,init_method)
-
         # block 2： add a BN layer
         if self.useBatchNorm:
             self.NormLayer = nn.BatchNorm1d(self.timeWindows)#???
-        
         # block 3： use dropout
         self.UseDropOut = False
         self.DPLayer = nn.Dropout(dropOut)             
@@ -251,139 +223,12 @@ class LIAFCell(baseNeuron):
             
         return output
 
-# 复合的LIAF神经元，突触连接：linear+wighted-memory
-class LIAFRCell(baseNeuron):
-
-    #standard LIAF-RNN cell based on LIAFcell
-    #简介: 仿照RNN对LIAF模型进行轻度修改
-    #记号：v为膜电位，f为脉冲，x为输入，w1w2为权重，t是时间常数
-    #         v_t' = w1 *v_{t-1} + w2 * x_n
-    #         f = spikefun(v_t')
-    #         x_{n+1} = analogfun(v_t')
-    #         v_t = v_t' * (1-f) * t
-    #update: 2020-03-21
-    #author: Linyh
-
-    def __init__(self,
-        inputSize,
-        hiddenSize,
-        actFun = torch.selu,
-        dropOut= 0,
-        timeWindows = 32,
-        useBatchNorm = False,
-        useLayerNorm = False,
-        init_method='kaiming'
-        ):
-        '''
-        @param input_size: (Num) number of input
-        @param hidden_size: (Num) number of output
-        @param actfun: handle of activation function 
-        @param decay: time coefficient in the model 
-        @param dropout: 0~1
-        @param useBatchNorm: if use
-        '''
-
-        super().__init__()
-        self.inputSize = inputSize
-        self.hiddenSize = hiddenSize
-        
-
-        self.actFun = actFun
-        self.timeWindows = timeWindows
-        self.spikeActFun = LIFactFun.apply
-        self.useBatchNorm = useBatchNorm
-        self.useLayerNorm = useLayerNorm
-        self.UseDropOut = True
-        self.batchSize = None
-        # block 1. add synaptic inputs: Wx+b=y
-        self.kernel=nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel,init_method)
-        self.kernel_v = nn.Linear(hiddenSize, hiddenSize)
-        paramInit(self.kernel_v,init_method)
-        # note: random initialization weights ->[0,scale),bias->[0,scale)
-        # block 2. add a BN layer
-        if self.useBatchNorm:
-            if using_td_batchnorm:
-                self.NormLayer = thBN.BatchNorm1d(hiddenSize)
-            else:
-                self.NormLayer = nn.BatchNorm1d(hiddenSize)
-
-        if self.useLayerNorm:
-            self.NormLayer = nn.LayerNorm(hiddenSize)
-        # block 3. use dropout
-        self.UseDropOut = False
-        self.DPLayer = nn.Dropout(dropOut)
-        if 0 < dropOut < 1:  # enable drop_out in cell
-            self.UseDropOut = True
-
-        # Choose QLIAF mode
-        if Qbit>0 :
-            MultiLIFactFun.Nbit = Qbit
-            print("warning: assert ActFun = MultiLIFactFun.apply")
-            self.actFun = MultiLIFactFun.apply
-            print(MultiLIFactFun.Nbit)
-
-
-    def forward(self,
-        input,
-        init_v=None):
-        """
-        @param input: a tensor of of shape (Batch, time, insize)
-        @param init_v: a tensor with size of (Batch, time, outsize) denoting the mambrane v.
-        """
-        #step 0: init
-        self.device = self.kernel.weight.device
-        if self.timeWindows != input.size()[1]:
-            print('wrong num of time intervals')
-        if input.device != self.device:
-            input = input.to(self.device)
-        
-        self.batchSize = input.size()[0]#adaptive for mul-gpu training
-        output_init = torch.zeros(self.batchSize,self.timeWindows,self.hiddenSize,device=self.device,dtype=dtype)
-        output_fired = torch.zeros(self.batchSize,self.timeWindows,self.hiddenSize,device=self.device,dtype=dtype)
-        # Step 1: accumulate 
-        for time in range(self.timeWindows):
-            event_frame_t = input[:,time,:].float().to(self.device)
-            event_frame_t = event_frame_t.view(self.batchSize, -1)
-            output_init[:,time,:] = self.kernel(event_frame_t)
-        # Step 2: Normalization 
-        normed_v = output_init
-        if self.useBatchNorm:
-            normed_v = self.NormLayer(output_init)
-
-        if v is None:#initialization of V
-            if init_v is None:
-                v = torch.zeros(self.batchSize, self.hiddenSize, device=event_frame_t.device,dtype=dtype)
-            else:
-                v = init_v   
-
-        for time in range(self.timeWindows):
-            v = normed_v[:,time,:] + self.kernel_v(v)
-            # Step 2: Fire and leaky 
-            fire = self.spikeActFun(v)
-            output = self.actFun(v)
-            output_fired[:,time,:] = output
-            v = self.decay * (1 - fire) * v
-        
-        if self.useLayerNorm:
-            output = self.NormLayer(output)
-
-        # step 4: DropOut
-        if self.UseDropOut:
-            output_fired = self.DPLayer(output_fired)
-        return output_fired
-
-# 复合的LIAF神经元，突触连接：2dconv
 class LIAFConvCell(baseNeuron):
     # standard LIAF cell based on LIFcell
-    #简介: 替换线性为卷积的 cell，由LIF模型的演变而来
-    #记号：v为膜电位，f为脉冲，x为输入，w为权重，t是时间常数
     #         v_t' = v_{t-1} + w conv x_n
     #         f = spikefun(v_t')
     #         x_{n+1} = analogfun(v_t')
     #         v_t = v_t' * (1-f) * t
-    # update: 2020-02-29
-    # author: Linyh
     def __init__(self,
                  inChannels,
                  outChannels,
@@ -422,9 +267,7 @@ class LIAFConvCell(baseNeuron):
         '''
         super().__init__()
         self.kernelSize = kernelSize
-
         self.decay =  torch.nn.Parameter(torch.FloatTensor([0.5]), requires_grad=True)
-
         self.actFun = actFun
         self.stride = stride
         self.padding = padding
@@ -527,7 +370,6 @@ class LIAFConvCell(baseNeuron):
             output_pool = self.DPLayer(output_pool)
         return output_pool
 
-# 时间维分别卷积的卷积层
 class Temporal_Conv2d(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size,inputSize,
             stride=1,padding=1, dilation=1, groups=1,
@@ -550,10 +392,7 @@ class Temporal_Conv2d(nn.Conv2d):
 #ResBlock for ResNet18/34
 class LIAFResBlock(baseNeuron):
     # standard LIAF cell based on LIFcell
-    # update: 2020-08-10
-    # author: Linyh
     expansion = 1
-    #简介: 基于LIAF-CNN的残差块
     def __init__(self,
                  inChannels,
                  outChannels,
@@ -578,7 +417,6 @@ class LIAFResBlock(baseNeuron):
         self.shortcut = None
 
         if inChannels!=outChannels:
-            #判断残差类型——>输入输出是否具有相同维度
             stride = 2
             self.downSample = True
             #print(name +' dimension changed')  
@@ -614,14 +452,6 @@ class LIAFResBlock(baseNeuron):
             print('the output feature map is'+str(self.outputSize))
             
     def forward(self,input):
-        '''
-        设计网络的规则：
-        1.对于输出feature map大小相同的层，有相同数量的filters，即channel数相同；
-        2. 当feature map大小减半时（池化），filters(channel)数量翻倍。
-            对于残差网络，维度匹配的shortcut连接为实线，反之为虚线。维度不匹配时，同等映射有两种可选方案：  
-            直接通过zero padding 来增加维度（channel）。
-            乘以W矩阵投影到新的空间。实现是用1x1卷积实现的，直接改变1x1卷积的filters数目。这种会增加参数。
-        '''
         self.timeWindows = input.size()[2]
         self.batchSize = input.size()[0]
 
@@ -646,12 +476,7 @@ class LIAFResBlock(baseNeuron):
 #ResNeck for ResNet50+
 class LIAFResNeck(baseNeuron):
     # standard LIAF cell based on LIFcell
-    # update: 2020-11-22
-    # author: Linyh
-    #简介: 基于LIAF-CNN的残差块
-
     expansion = 4
-    
     def __init__(self,
                  cahnnel_now,
                  inChannels,
@@ -679,7 +504,6 @@ class LIAFResNeck(baseNeuron):
         self.shortcut = None
 
         if (inChannels* LIAFResNeck.expansion)!=cahnnel_now:
-            #判断残差类型——>输入输出是否具有相同维度
             stride = 2
             self.downSample = True
             #print(name +' dimension changed')  
@@ -722,14 +546,6 @@ class LIAFResNeck(baseNeuron):
             print('the output feature map is'+str(self.outputSize))
             
     def forward(self,input):
-        '''
-        设计网络的规则：
-        1.对于输出feature map大小相同的层，有相同数量的filters，即channel数相同；
-        2. 当feature map大小减半时（池化），filters(channel)数量翻倍。
-            对于残差网络，维度匹配的shortcut连接为实线，反之为虚线。维度不匹配时，同等映射有两种可选方案：  
-            直接通过zero padding 来增加维度（channel）。
-            乘以W矩阵投影到新的空间。实现是用1x1卷积实现的，直接改变1x1卷积的filters数目。这种会增加参数。
-        '''
         self.timeWindows = input.size()[2]
         self.batchSize = input.size()[0]
 
@@ -753,265 +569,3 @@ class LIAFResNeck(baseNeuron):
         output = self.actFun(cv3_output+shortcut_output)
         output = self.mem_update(output)
         return output
-
-# 复合的LIAF神经元，以门控形式组合
-class LIAFLSTMCell(nn.Module):
-    #LSTMCell
-    #update: 2020-03-21
-    #author: Linyh
-    #简介: 仿照RNN对LIAF模型进行轻度修改，每个门维护一个膜电位
-    #方案1: 全仿LSTM，当decay=0，spikefire为sigmoid时完全是LSTM
-    #记号：类似
-    #         v_t' = v_{t-1} + w2 * x_n
-    #         f = spikefun(v_t')
-    #         v_t = v_t' * (1-f) * t
-    #
-    #         fi = \sigma(vi) 
-    #         ff = \sigma(vf) 
-    #         fg = \tanh(vg)
-    #         fo = \sigma(vo) 
-    #         c' = ff * fc + fi * fg 
-    #         x_{n+1} = o * \tanh(c') 
-
-    def __init__(self,
-        inputSize,
-        hiddenSize,
-        actFun = torch.selu,
-        spikeActFun = LIFactFun.apply,
-        decay = 0.3,
-        dropOut= 0,
-        useBatchNorm= False,
-        useLayerNorm= False,
-        timeWindows = 5,
-        Qbit = 0,
-        init_method='kaiming',
-        sgFun = torch.relu
-        ):
-        '''
-        @param input_size: (Num) number of input
-        @param hidden_size: (Num) number of output
-        @param actfun: handle of activation function 
-        @param actfun: handle of recurrent spike firing function
-        @param decay: time coefficient in the model 
-        @param dropout: 0~1 unused
-        @param useBatchNorm: unused
-        '''
-
-        super().__init__()
-        self.inputSize = inputSize
-        self.hiddenSize = hiddenSize
-        self.decay = decay
-        self.actFun = actFun
-        self.sgFun = sgFun #default:sigmoid
-        self.spikeActFun = spikeActFun
-        self.useBatchNorm = useBatchNorm
-        self.useLayerNorm = useLayerNorm
-        self.timeWindows = timeWindows
-        self.UseDropOut = True
-        self.batchSize = None
-        # block 1. add synaptic inputs: Wx+b=y
-        self.kernel_i=nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_i,init_method)
-        self.kernel_f = nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_f,init_method)
-        self.kernel_g = nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_g,init_method)
-        self.kernel_o = nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_o,init_method)
-
-        # block 2. add a Norm layer
-        if self.useBatchNorm:
-            self.BNLayerx = nn.BatchNorm1d(self.timeWindows)
-        if self.useLayerNorm:
-            self.Lnormx = nn.LayerNorm([self.timeWindows,hiddenSize])
-        # block 3. use dropout
-        self.UseDropOut = False
-        self.DPLayer = nn.Dropout(dropOut)
-        if 0 < dropOut < 1:  # enable drop_out in cell
-            self.UseDropOut = True
-
-        # Choose QLIAF mode
-        if Qbit>0 :
-            MultiLIFactFun.Nbit = Qbit
-            print("warning: assert ActFun = MultiLIFactFun.apply")
-            self.actFun = MultiLIFactFun.apply
-            print('# of threshold = ', MultiLIFactFun.Nbit)
-
-        self.c =None
-
-    def forward(self,
-        input,
-        init_v=None):
-        """
-        @param input: a tensor of of shape (Batch, N)
-        @param state: a pair of a tensor including previous output and cell's potential with size (Batch,3, N).
-        @return: new state of cell and output for hidden layer
-        Dense Layer: linear kernel
-        \begin{array}{ll}
-        i = \sigma(W_{ii} x + b_{ii} + W_{hi} h + b_{hi}) \\
-        f = \sigma(W_{if} x + b_{if} + W_{hf} h + b_{hf}) \\
-        g = \tanh(W_{ig} x + b_{ig} + W_{hg} h + b_{hg}) \\
-        o = \sigma(W_{io} x + b_{io} + W_{ho} h + b_{ho}) \\
-        c' = f * c + i * g \\
-        x' = o * \tanh(c') \\
-        \end{array}
-        """
-        #step 0: init
-        self.batchSize = input.size()[0]#adaptive for mul-gpu training
-        self.device = self.kernel_i.weight.device
-        if self.timeWindows != input.size()[1]:
-            print('wrong num of time intervals')
-        if input.device != self.device:
-            input = input.to(self.device)
-
-        if init_v is None:
-            vi = torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-            vf = torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-            vg = torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-            vo= torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-            c = torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-        else:
-            vi = init_v.clone()
-            vf = init_v.clone()
-            vg = init_v.clone()
-            vo= init_v.clone()
-            c = init_v.clone()
-        
-        output = torch.zeros(self.batchSize,self.timeWindows,self.hiddenSize,device=self.device,dtype=dtype)
-
-        for time in range(self.timeWindows):
-        # Step 1: accumulate and reset,spike used as forgetting gate
-            vi = self.kernel_i(input[:,time,:].float()) + vi
-            vf = self.kernel_f(input[:,time,:].float()) + vf 
-            vg = self.kernel_g(input[:,time,:].float()) + vg
-            vo= self.kernel_o(input[:,time,:].float()) + vo
-
-            fi = self.spikeActFun(vi)
-            ff = self.spikeActFun(vf)
-            fg = self.spikeActFun(vg)
-            fo = self.spikeActFun(vo)
-
-            # Step 2: figo
-            i = self.sgFun(vi)
-            f = self.sgFun(vf)
-            o = self.sgFun(vo)
-            g = self.actFun(vg)
-
-            # step 3: Learn 
-            c = c * f  + i * g
-            
-            # step 4: renew
-            output[:,time,:] = self.actFun(c) * o
-
-            #step 5: leaky
-            vi = self.decay * (1 - fi ) * vi
-            vf = self.decay * (1 - ff ) * vf
-            vg = self.decay * (1 - fg ) * vg
-            vo= self.decay * (1 - fo ) * vo
-
-        # step 6: Norms
-        if self.useBatchNorm:
-            output = self.BNLayerx(output)
-        if  self.useLayerNorm:
-            output = self.Lnormx(output)
-
-        return output
-
-# 复合的LIAF神经元，以GRU形式组合
-class LIAFGRUCell(nn.Module):
-    #########
-    #author：Lin-Gao
-    #in 2020-07
-    #########
-    def __init__(self, inputSize, hiddenSize, spikeActFun, actFun=torch.selu, dropOut=0,
-                 useBatchNorm=False, useLayerNorm=False, init_method='kaiming', gFun=torch.tanh, decay=0.3):
-        """
-        :param inputSize:(Num) number of input
-        :param hiddenSize:(Num) number of output
-        :param actFun:handle of activation function
-        :param spikeAcFun:handle of recurrent spike firing function
-        :param dropOut: 0~1 unused
-        :param useBatchNorm:
-        :param useLayerNorm:
-        :param init_method:
-        :param gFun:
-        """
-        super().__init__()
-        self.inputSize = inputSize
-        self.hiddenSize = hiddenSize
-        self.decay = decay
-        self.actFun = actFun
-        self.gFun = gFun  # default:tanh
-        self.spikeActFun = spikeActFun
-        self.useBatchNorm = useBatchNorm
-        self.useLayerNorm = useLayerNorm
-        self.UseDropOut = True
-        self.batchSize = None
-        # block 1. add synaptic inputs:Wx+b
-        self.kernel_r = nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_r, init_method)  # 作用
-        self.kernel_z = nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_z, init_method)
-        self.kernel_h = nn.Linear(inputSize, hiddenSize)
-        paramInit(self.kernel_h, init_method)
-        # block 2. add synaptic inputs:Hx+b
-        self.kernel_r_h = nn.Linear(hiddenSize, hiddenSize)
-        paramInit(self.kernel_r_h, init_method)
-        self.kernel_z_h = nn.Linear(hiddenSize, hiddenSize)
-        paramInit(self.kernel_z_h, init_method)
-        self.kernel_h_h = nn.Linear(hiddenSize, hiddenSize, bias=False)
-        paramInit(self.kernel_h_h, init_method)
-        # block 3. add a Norm layer
-        if self.useBatchNorm:
-            self.BNLayerx = nn.BatchNorm1d(hiddenSize)
-            self.BNLayerc = nn.BatchNorm1d(hiddenSize)
-        if self.useLayerNorm:
-            self.Lnormx = nn.LayerNorm(hiddenSize)
-            self.Lnormc = nn.LayerNorm(hiddenSize)
-        # block 4. use dropout
-        self.UseDropOut = False
-        self.DPLayer = nn.Dropout(dropOut)
-        if 0 < dropOut < 1:  # enable drop_out in cell
-            self.UseDropOut = True
-
-    def forward(self, input, init_v=None):
-        """
-        :param input:
-        :param init_v:
-        :return:
-        """
-        self.batchSize = input.size()[0]
-        input = input.reshape([self.batchSize, -1])
-        if input.device != self.kernel_r.weight.device:
-            input = input.to(self.kernel_r.weight.device)
-        if self.h is None:
-            if init_v is None:
-                self.h = torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-                self.u = torch.zeros(self.batchSize, self.hiddenSize, device=input.device,dtype=dtype)
-            else:
-                self.h = init_v.clone()
-                self.u = init_v.clone()
-        # Step 1: accumulate and reset,spike used as forgetting gate
-        r = self.kernel_r(input.float()) + self.kernel_r_h(self.h)
-        z = self.kernel_z(input.float()) + self.kernel_z_h(self.h)
-        r = self.actFun(r)
-        z = self.actFun(z)
-        h = self.kernel_h(input.float()) + self.kernel_h_h(self.h) * r
-        h = self.gFun(h)
-        # Step 2: renew
-        h_ = self.h.clone()
-        self.h = self.decay * self.u * (1 - self.spikeActFun(self.u))
-        self.u = (1 - z) * h_ + z * h
-        x = self.spikeActFun(self.u)
-
-        # step 3: Norms
-        if self.useBatchNorm:
-            self.h = self.BNLayerc(self.h)
-            self.u = self.BNLayerc(self.u)
-            x = self.BNLayerx(x)
-        if self.useLayerNorm:
-            self.h = self.Lnormc(self.h)
-            self.u = self.Lnormc(self.u)
-            x = self.Lnormx(x)
-        return x
-
