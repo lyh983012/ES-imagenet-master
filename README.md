@@ -87,3 +87,6 @@ to
   | ResNet34|3D-CNN |39.410 |48.22M|20.671|21.411 |
   | ResNet34|LIF| 43.424 |21.80M|25.783|0.288 |
   | ResNet34|LIAF| 47.466 |21.80M|25.783|28.901 |
+  | ResNet18+self-pretrain|LIAF |50.54| 11.69M|12.668|14.159 |
+  | ResNet18+imagenet-pretrain|LIAF |**52.25**| 11.69M|12.668|14.159 |
+
