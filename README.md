@@ -1,4 +1,7 @@
 # es-imagenet-master
+
+![image](./viz.gif)
+
 code for generating data set ES-ImageNet with corresponding training code
 
 ## dataset generator 
