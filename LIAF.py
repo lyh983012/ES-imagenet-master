@@ -560,9 +560,9 @@ class LIAFResNeck(baseNeuron):
 
         cv3_output = self.cv3(cv2_output)
         cv3_output = self.bn3(cv3_output)
-
-        shortcut_output = torch.zeros(cv3_output.size(),device=cv3_output.device,dtype=dtype)
+        
         if self.downSample:
+            shortcut_output = torch.zeros(cv3_output.size(),device=cv3_output.device,dtype=dtype)
             for time in range(self.timeWindows):
                 shortcut_output[:,:,time,:,:] = self.shortcut(input[:,:,time,:,:])
             shortcut_output = self.shortcut_norm(shortcut_output)
