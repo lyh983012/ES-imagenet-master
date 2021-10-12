@@ -462,8 +462,8 @@ class LIAFResBlock(baseNeuron):
         cv2_output = self.cv2(cv1_output)
         cv2_output = self.bn2(cv2_output)
 
-        shortcut_output = torch.zeros(cv2_output.size(),device=cv2_output.device,dtype=dtype)
         if self.downSample:
+            shortcut_output = torch.zeros(cv2_output.size(),device=cv2_output.device,dtype=dtype)
             for time in range(self.timeWindows):
                 shortcut_output[:,:,time,:,:] = self.shortcut(input[:,:,time,:,:])
         # 3dnorm require[batch channel depth width height]
