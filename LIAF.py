@@ -461,7 +461,6 @@ class LIAFResBlock(baseNeuron):
         cv1_output = self.mem_update(cv1_output)
         cv2_output = self.cv2(cv1_output)
         cv2_output = self.bn2(cv2_output)
-
         if self.downSample:
             shortcut_output = torch.zeros(cv2_output.size(),device=cv2_output.device,dtype=dtype)
             for time in range(self.timeWindows):
@@ -560,7 +559,6 @@ class LIAFResNeck(baseNeuron):
 
         cv3_output = self.cv3(cv2_output)
         cv3_output = self.bn3(cv3_output)
-        
         if self.downSample:
             shortcut_output = torch.zeros(cv3_output.size(),device=cv3_output.device,dtype=dtype)
             for time in range(self.timeWindows):
