@@ -97,3 +97,21 @@ to
   
   Note: model (a), (b) and (c) are stored in ./pretrained_model
 
+## Download
+
+The datasets ES-ImageNet (100GB) for this study can be download in the [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/94873ab4ec2a4eb497b3/)
+The converted event-frame version (40GB) can be found in [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/ee07f304fb3a498d9f0f/)
+
+
+## Citation
+If you use this for research, please cite. Here is an example BibTeX entry:
+
+```
+@misc{ESImageNet2021,
+  title={ES-ImageNet: A Million Event-Stream Classification Dataset for Spiking Neural Networks},
+  author={Yiha, Lin and Wei, Ding and Shaohua, Qiang and Lei, Deng and Guoqi, Li},
+  year={2021},
+  publisher={Frontiers in Neuronscience},
+  howpublished={\url{https://github.com/lyh983012/ES-imagenet-master}},
+}
+```
