@@ -108,11 +108,12 @@ to
 If you use this for research, please cite. Here is an example BibTeX entry:
 
 ```
-@misc{ESImageNet2021,
-  title={ES-ImageNet: A Million Event-Stream Classification Dataset for Spiking Neural Networks},
-  author={Yiha, Lin and Wei, Ding and Shaohua, Qiang and Lei, Deng and Guoqi, Li},
-  year={2021},
-  publisher={Frontiers in Neuronscience},
-  howpublished={\url{https://github.com/lyh983012/ES-imagenet-master}},
+@misc{lin2021esimagenet,
+    title={ES-ImageNet: A Million Event-Stream Classification Dataset for Spiking Neural Networks},
+    author={Yihan Lin and Wei Ding and Shaohua Qiang and Lei Deng and Guoqi Li},
+    year={2021},
+    eprint={2110.12211},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
 }
 ```
