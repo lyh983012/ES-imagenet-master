@@ -14,7 +14,7 @@ code for generating data set ES-ImageNet with corresponding training code
   | trainlabel_dir.txt   | It stores the corresponding relationship between the class name and label of the original Imagenet file |
   | trainlabel.txt       | It is generated during transformation and stores the label of training set |
   | valconvert.py        | Transformation code for test set. |
-  | valorigin.txt        | Original test label, need and valconvert.py Put it in the same folder |
+  | valorigin.txt        | Original test label of ImageNet-1K.  Put it in the same folder with valconvert.py if you need. |
   | vallabel.txt         | It is generated during transformation and stores the label of training set. |
 
 ## dataset usage
