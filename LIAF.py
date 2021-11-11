@@ -86,7 +86,7 @@ class baseNeuron(nn.Module):
         super().__init__()
         self.norm = 0.3
         self.decay = torch.nn.Parameter(torch.ones(1) * 0.5, requires_grad=True)
-        self.thresh = torch.ones(1).cuda() * 0.5
+        self.thresh = 0.5
         
     def forward(self,input):
         raise NotImplementedError("Input neurons must implement `forward`")
