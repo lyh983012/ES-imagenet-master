@@ -109,12 +109,15 @@ to
 If you use this for research, please cite. Here is an example BibTeX entry:
 
 ```
-@misc{lin2021esimagenet,
-    title={ES-ImageNet: A Million Event-Stream Classification Dataset for Spiking Neural Networks},
-    author={Yihan Lin and Wei Ding and Shaohua Qiang and Lei Deng and Guoqi Li},
-    year={2021},
-    eprint={2110.12211},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
+@ARTICLE{ES_ImageNet2021,
+AUTHOR={Lin, Yihan and Ding, Wei and Qiang, Shaohua and Deng, Lei and Li, Guoqi},   
+TITLE={ES-ImageNet: A Million Event-Stream Classification Dataset for Spiking Neural Networks},      
+JOURNAL={Frontiers in Neuroscience},      
+VOLUME={15},      
+PAGES={1546},     
+YEAR={2021},      	  
+URL={https://www.frontiersin.org/article/10.3389/fnins.2021.726582},       	
+DOI={10.3389/fnins.2021.726582},      
+ISSN={1662-453X},   
 }
 ```
