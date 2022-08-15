@@ -106,7 +106,7 @@ to
 - If you only need the validation set, you can download it in [Tsinghua Cloud3](https://cloud.tsinghua.edu.cn/f/5e32c9fdd8094f3994df/) separately
 
 ## Citation
-If you use this for research, please cite. Here is an example BibTeX entry:
+If you find this code useful in your research, please consider citing and here is an example BibTeX entry:
 
 ```
 @ARTICLE{ES_ImageNet2021,
