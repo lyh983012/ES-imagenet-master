@@ -1,5 +1,9 @@
 # es-imagenet-master
 
+### *Latest News: Now you can use [SpikingJelly](https://github.com/fangwei123456/spikingjelly) to process ES-ImageNet!*
+
+API reference: [ES-imageNet API](https://spikingjelly.readthedocs.io/zh_CN/latest/spikingjelly.datasets.html?highlight=ES-ImageNet#spikingjelly.datasets.es_imagenet.ESImageNet)
+
 ![image](./viz.gif)
 
 code for generating data set ES-ImageNet with corresponding training code
