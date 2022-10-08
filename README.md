@@ -100,6 +100,7 @@ to
   | ResNet34+imagenet-pretrain (c)|LIAF| 51.83 |21.80M|25.783|28.901 |
   
   Note: model (a), (b) and (c) are stored in ./pretrained_model
+  Some problems related to model loading can be referred to the [issue](https://github.com/lyh983012/ES-imagenet-master/issues/3#issuecomment-1272197227).
 
 ## Download
 
