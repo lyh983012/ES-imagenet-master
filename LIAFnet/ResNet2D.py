@@ -15,7 +15,7 @@ class Config(object):
         self.Qbit=0                                                     # 是否使用多阈值函数（>2支持，Qbit的值实际上是阈值个数）
         '''cfg for net'''
         self.onlyLast= False                                            # 是否只用最后一个输出
-        self.cfgCnn = [(16, 64, 7, True)]
+        self.cfgCnn = [(1, 64, 7, True)]
         self.cfgRes = [(64,64),(64,64),(64,128),
                             (128,128),(128,256),
                             (256,256),(256,512),
@@ -164,7 +164,7 @@ class ResNet2D(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(2, self.inplanes, kernel_size=[7,7], stride=[2,2], padding=[3,3],
+        self.conv1 = nn.Conv2d(1, self.inplanes, kernel_size=[7,7], stride=[2,2], padding=[3,3],
                                bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)

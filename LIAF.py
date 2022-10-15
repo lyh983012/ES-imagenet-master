@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 import math
-import util.thBN as thBN
+import util
 
 torch.manual_seed(1)
 torch.cuda.manual_seed_all(1)# if you are using multi-GPU.
@@ -438,11 +438,11 @@ class LIAFResBlock(baseNeuron):
 
         if self.useBatchNorm:
             if using_td_batchnorm:
-                self.bn1 = thBN.BatchNorm3d(outChannels)
+                self.bn1 = util.thBN.BatchNorm3d(outChannels)
                 self.bn1.k = 4
-                self.bn2 = thBN.BatchNorm3d(outChannels)
+                self.bn2 = util.thBN.BatchNorm3d(outChannels)
                 self.bn2.k = 8
-                self.shortcut_norm = thBN.BatchNorm3d(outChannels)
+                self.shortcut_norm = util.thBN.BatchNorm3d(outChannels)
                 self.shortcut_norm.k=8
             else:
                 self.bn1 = nn.BatchNorm3d(outChannels)

@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 import math
-import util.thBN as thBN
+import util
 from LIAF import *
 
 #ResNet
