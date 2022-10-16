@@ -1,8 +1,6 @@
 # Author: lyh 
 # Date  : 2020-09-19
 # run it use foloowing comand
-# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python -m torch.distributed.launch --nproc_per_node=7 compare_ES_3DCNN18.py
-# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 nohup python -m torch.distributed.launch --nproc_per_node=7 compare_ES_3DCNN18.py
 from __future__ import print_function
 import sys
 sys.path.append("..")

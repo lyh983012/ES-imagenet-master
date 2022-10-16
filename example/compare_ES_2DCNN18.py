@@ -1,15 +1,14 @@
 # Author: lyh 
 # Date  : 2020-09-19
 # run it use foloowing comand
-# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python -m torch.distributed.launch --nproc_per_node=7 compare_ES_2DCNN18.py.
-# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 nohup python -m torch.distributed.launch --nproc_per_node=7 compare_ES_2DCNN18.py.
+# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m torch.distributed.launch --nproc_per_node=8 compare_ES_2DCNN18.py
 from __future__ import print_function
 import sys
 sys.path.append("..")
 from util.util import lr_scheduler
-from datasets.es_imagenet_new import ESImagenet_Dataset
+from datasets.reconstructed_ES_imagenet import ESImagenet2D_Dataset as ESImagenet_Dataset
 import LIAF
-from LIAFnet.ResNet2D import *
+from LIAFnet.LIAFResNet import *
 
 import torch.distributed as dist 
 import torch.nn as nn
@@ -17,7 +16,6 @@ import argparse, pickle, torch, time, os,sys
 from importlib import import_module
 from tensorboardX import SummaryWriter
 from torch.nn.parallel import DistributedDataParallel as DDP
-
 
 ##################### Step1. Env Preparation #####################
 
@@ -41,16 +39,22 @@ if local_rank == 0 :
     master = True
     print('start recording')
 
-##################### Step2. load in dataset #####################
-config  = Config18()
-cnn = resnet18()
+modules = import_module('LIAFnet.LIAFResNet_18')
+config  = modules.Config()
+workpath = os.path.abspath(os.getcwd())
+num_epochs = 60
+batch_size = config.batch_size * 4 #2DCNN saves lots of GrapgMem
+timeWindows = config.timeWindows
+
+config.cfgCnn = [1,64]
+cnn = LIAFResNet(config)
 if master:
     print("Total number of paramerters in networks is {}  ".format(sum(x.numel() for x in cnn.parameters())))
 
-workpath = os.path.abspath(os.getcwd())
-num_epochs = config.num_epochs
-batch_size = config.batch_size
-timeWindows = config.timeWindows
+
+
+##################### Step2. load in dataset #####################
+
 epoch = 0
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch

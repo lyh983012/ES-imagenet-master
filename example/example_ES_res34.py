@@ -1,8 +1,5 @@
 # Author: lyh 
 # Date  : 2020-09-19
-# 使用了分布式学习的ImageNet训练代码
-# 使用以下命令直接执行
-# CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python -m torch.distributed.launch --nproc_per_node=7 example_ES_res34.py
 from __future__ import print_function
 import sys
 sys.path.append("..")
