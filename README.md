@@ -93,10 +93,10 @@ to
   | ResNet34|2D-CNN |42.736| 21.79M|3.211|3.611 |
   | ResNet34|3D-CNN |39.410 |48.22M|20.671|21.411 |
   | ResNet34|LIF| 43.424 |21.80M|25.783|0.288 |
-  | ResNet18+imagenet-pretrain (a)|LIF |**43.74** |11.69M|12.668|0.269 |
+  | ResNet18+imagenet-pretrain (a)|LIF |43.74 |11.69M|12.668|0.269 |
   |[ConvECLIF2D-A](https://www.sciencedirect.com/science/article/pii/S0893608022000399)| ECLIF| 44.25 | 17.99M | - | - |
-  |[Surrogate Module]([https://www.sciencedirect.com/science/article/pii/S0893608022000399](https://openreview.net/pdf?id=zRkz4duLKp))| LIF|44.76 |- | -|- |
   | ResNet34|LIAF| 47.466 |21.80M|25.783|28.901 |
+  |[Surrogate Module]([https://www.sciencedirect.com/science/article/pii/S0893608022000399](https://openreview.net/pdf?id=zRkz4duLKp))| LIF|44.76 |- | -|- |
   | ResNet18+self-pretrain|LIAF |50.54| 11.69M|12.668|14.159 |
   | ResNet18+imagenet-pretrain (b)|LIAF |**52.25**| 11.69M|12.668|14.159 |
   | ResNet34+imagenet-pretrain (c)|LIAF| 51.83 |21.80M|25.783|28.901 |
