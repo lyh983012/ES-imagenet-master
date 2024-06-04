@@ -4,6 +4,8 @@
 
 API reference: [ES-imageNet API](https://spikingjelly.readthedocs.io/zh_CN/latest/spikingjelly.datasets.html?highlight=ES-ImageNet#spikingjelly.datasets.es_imagenet.ESImageNet)
 
+checkpoints download: [google driver](https://drive.google.com/drive/folders/1w-MrZ4sRuUeM5l07yaO6b2G_RmIZsJtm?usp=share_link)
+
 ![image](./viz.gif)
 
 code for generating data set ES-ImageNet with corresponding training code
